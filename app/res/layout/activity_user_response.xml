@@ -8,16 +8,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.decisio.PassQuesActivity$PlaceholderFragment" >
 
-    <TextView
-        android:id="@+id/tv_enter_location_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:gravity="center_horizontal"
-        android:text="Location Id" />
-
     <LinearLayout
         android:id="@+id/ll_overall_rating"
         android:layout_width="fill_parent"
@@ -76,18 +66,6 @@
         android:layout_alignParentRight="true"
         android:text="140 chars"
         android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <EditText
-        android:id="@+id/et_loc_id_frm_usr"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_enter_location_id"
-        android:layout_centerHorizontal="true"
-        android:ems="4"
-        android:hint="See id from your bill / receipt"
-        android:singleLine="true"
-        android:textSize="13sp"
-        android:textStyle="italic" />
 
     <ListView
         android:id="@+id/lv_ques_parameters"
