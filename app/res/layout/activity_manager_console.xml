@@ -1,0 +1,84 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <EditText
+        android:id="@+id/et_ques1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/tv_ques1"
+        android:ems="25"
+        android:singleLine="false" >
+
+        <requestFocus />
+    </EditText>
+
+    <TextView
+        android:id="@+id/tv_ques2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_ques1"
+        android:layout_marginTop="20dp"
+        android:text="Enter Question 2" />
+
+    <EditText
+        android:id="@+id/et_ques2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/tv_ques2"
+        android:ems="25"
+        android:singleLine="false" >
+    </EditText>
+
+    <TextView
+        android:id="@+id/tv_ques3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_ques2"
+        android:layout_marginTop="20dp"
+        android:text="Enter Question 3" />
+
+    <EditText
+        android:id="@+id/et_ques3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/tv_ques3"
+        android:ems="25"
+        android:singleLine="false" >
+    </EditText>
+
+    <Button
+        android:id="@+id/btn_submit_ques"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/et_ques3"
+        android:layout_marginTop="50dp"
+        android:onClick="clickToSubmit"
+        android:text="Submit" />
+
+    <Button
+        android:id="@+id/btn_cancel_ques"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/btn_submit_ques"
+        android:layout_alignBottom="@+id/btn_submit_ques"
+        android:layout_alignParentLeft="true"
+        android:onClick="clickToCancel"
+        android:text="Cancel" />
+
+    <TextView
+        android:id="@+id/tv_ques1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="15dp"
+        android:text="Enter Question 1" />
+
+</RelativeLayout>

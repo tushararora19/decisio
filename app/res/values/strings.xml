@@ -6,5 +6,12 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_map">MapActivity</string>
     <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_question">QuestionActivity</string>
+    <string name="title_activity_passcode">PasscodeActivity</string>
+    <string name="title_activity_manager_console">ManagerConsole</string>
+    <string name="title_manager_login">Manager Sign In</string>
+    <string name="signin">Sign In</string>
+    <string name="cancel">Cancel</string>
+    <string name="title_activity_manager_location">ManagerLocationActivity</string>
 
 </resources>

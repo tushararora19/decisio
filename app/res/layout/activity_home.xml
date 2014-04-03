@@ -9,6 +9,16 @@
     tools:context=".HomeActivity" >
 
     <Button
+        android:id="@+id/btn_manager_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:onClick="onClickOpenManagerConsole"
+        android:text="Click to manager console" />
+
+    <Button
         android:id="@+id/btn_open_map"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -16,7 +26,17 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_marginBottom="80dp"
-        android:text="Click to open Map"
-        android:onClick="clickOpenMap" />
+        android:onClick="onClickOpenMap"
+        android:text="Click to open Map" />
+
+    <TextView
+        android:id="@+id/tv_new_location_signup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/btn_manager_login"
+        android:layout_marginTop="20dp"
+        android:text="Sign-up New Managers"
+        android:textStyle="italic" />
 
 </RelativeLayout>

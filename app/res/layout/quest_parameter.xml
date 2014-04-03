@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/background_dark_grey"
+    android:padding="3dp" >
+
+    <CheckedTextView
+        android:id="@+id/ctv_ques"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="15dp"
+        android:background="@android:color/transparent"
+        android:checkMark="@drawable/selector_checkmark"
+        android:checked="false"
+        android:clickable="false"
+        android:gravity="center_vertical"
+        android:paddingLeft="5dp"
+        android:singleLine="false"
+        android:text="Review Parameter"
+        android:textColor="@color/text_white"
+        android:textSize="16sp"
+        android:onClick="onClickToggleCheckmark"/>
+
+</RelativeLayout>
