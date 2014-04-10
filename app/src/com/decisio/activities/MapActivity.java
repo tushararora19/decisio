@@ -39,7 +39,7 @@ GooglePlayServicesClient.ConnectionCallbacks,
 GooglePlayServicesClient.OnConnectionFailedListener{
 
     // TODO: remove marker from location searched by user when he comes back from response screen (but display that point i.e. he should see that point instead of his current location). Do this in onResume
-    
+
     private SupportMapFragment mapFragment;
     private static GoogleMap map;
     private LocationClient mLocationClient;
@@ -89,7 +89,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     protected void onStart() {
         super.onStart();
         // Connect the client.
-        
+
         if (isGooglePlayServicesAvailable()) {
             mLocationClient.connect();
         }
@@ -122,7 +122,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
                 mLocationClient.connect();
                 break;
             }
-            
+
         case SEARCH_REQ_CODE:
             if (resultCode == Activity.RESULT_OK) {
                 if (marker!=null) 
@@ -130,7 +130,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
             }
         }
     }
-    
+
     @Override
     protected void onResume() {
         // TODO Auto-generated method stub
@@ -176,20 +176,13 @@ GooglePlayServicesClient.OnConnectionFailedListener{
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
             map.animateCamera(cameraUpdate);
-
-            // TODO: get locations from backend table "Location.
-            // for each location id, get its name: title of marker when clicked. 
-            // get corresponding last 5 entries (overallMood) from CafeMood This will be icon 
-            // Take average (1 for sad, 2 for neutral, 3 for Happy) and display respective face (1 to 1.5 is sad), (1.5 to 2.25 is neutral) (2.25 to 3 is Happy)
-            // For each location, from last 5 entries, select that ques that has max "true" considering it was last updated recently. This will be shown as snippet.
-
-            if (marker!=null)
-                marker.remove();
-            mapUser.populateMap();
         } else {
             Toast.makeText(this, "Current location was null, enable GPS on emulator!", Toast.LENGTH_SHORT).show();
         }
         
+        if (marker!=null)
+            marker.remove();
+        mapUser.populateMap();        
     }
 
     /*
@@ -277,7 +270,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
                         marker.remove();
                     MapUtil.getLocationFromName(location);
                     svLocationSearch.setQuery("", false);
-                    
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (IndexOutOfBoundsException ioe) {
@@ -325,11 +318,11 @@ GooglePlayServicesClient.OnConnectionFailedListener{
             }
         });    
     }
-    
+
     public static GoogleMap getMap() {
         return map;
     }
-    
+
     public static Marker getMarker() {
         return marker;
     }
