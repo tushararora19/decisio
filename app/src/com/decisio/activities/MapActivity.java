@@ -50,6 +50,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     private MapUserUtil mapUser;
     private MapManagerUtil mapManager;
     private final int SEARCH_REQ_CODE = 1000;
+    private final int USER_CURRENT_LOC_ZOOM_VALUE = 15;
 
     /*
      * Define a request code to send to Google Play services This code is
@@ -174,7 +175,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         if (location != null) {
             Toast.makeText(this, "GPS location was found!", Toast.LENGTH_SHORT).show();
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, USER_CURRENT_LOC_ZOOM_VALUE);
             map.animateCamera(cameraUpdate);
         } else {
             Toast.makeText(this, "Current location was null, enable GPS on emulator!", Toast.LENGTH_SHORT).show();

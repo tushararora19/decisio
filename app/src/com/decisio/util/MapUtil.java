@@ -24,18 +24,15 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.GetCallback;
 import com.parse.ParseException;
-import com.parse.ParseGeoPoint;
 import com.parse.ParseQuery;
 
 public class MapUtil {
 
     private final static int MAX_RESULTS = 1; 
     private static Geocoder geoCoder = new Geocoder(DecisioApp.getContext(), Locale.getDefault());
-    private final static double MAX_DISTANCE_IN_KM = 0.05;
     private static int UNIQUE_LOC_ID = -1;
     private static LocationPoint loc = null;
-
-
+    private final static int OTHER_LOC_ZOOM_VALUE = 16;
 
     public static LocationPoint getLoc() {
         return loc;
@@ -153,7 +150,7 @@ public class MapUtil {
                     MapActivity.getMarker().remove();
             }
             LatLng latLng = new LatLng(Double.parseDouble(loc.getLocLatitude()), Double.parseDouble(loc.getLocLongitude()));
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, OTHER_LOC_ZOOM_VALUE);
             MapActivity.getMap().animateCamera(cameraUpdate);
         }
     }

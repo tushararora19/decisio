@@ -254,7 +254,7 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
             if (locId != -1) {
                 mood.put("Id", locId);
                 if (userSelectedLocId == -1){
-                    LocationPoint loc = new LocationPoint();
+                   // LocationPoint loc = new LocationPoint();
                     MapUtil.saveLocationInBackend(userSelectedloc, locId, "Cafe", userSelectedloc.getLocName(), userSelectedloc.getLocLatitude(), userSelectedloc.getLocLongitude(), userSelectedloc.getPasscode());
                     // TODO: show smiley on map now corresponding to this location 
                 }
