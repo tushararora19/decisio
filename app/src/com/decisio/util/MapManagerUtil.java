@@ -84,7 +84,7 @@ public class MapManagerUtil {
                 alert.show();
             }
             else 
-                Toast.makeText(DecisioApp.getContext(), "Location exists", Toast.LENGTH_SHORT);
+                Toast.makeText(DecisioApp.getContext(), "Location exists", Toast.LENGTH_SHORT).show();
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         } catch (IOException e) {
