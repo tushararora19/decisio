@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -24,7 +23,6 @@ public class ManagerConsole extends Activity {
     private EditText etQues1;
     private EditText etQues2;
     private EditText etQues3;
-    private Button btnSubmit;
     private static final String TAG = "Manager Console";
     private List<String> questions;
     private int locId;
@@ -37,7 +35,6 @@ public class ManagerConsole extends Activity {
         etQues1 = (EditText) findViewById(R.id.et_ques1);
         etQues2 = (EditText) findViewById(R.id.et_ques2);
         etQues3 = (EditText) findViewById(R.id.et_ques3);
-        btnSubmit = (Button) findViewById(R.id.btn_submit_ques);
 
         questions = new ArrayList<String>();
 
@@ -132,8 +129,6 @@ public class ManagerConsole extends Activity {
                     }     
                 } else {
                     Log.d(TAG, "First entry for this location");
-                    // TODO: make an entry in Location as well
-                    // now save in backend
                     saveInBackend(newQuestions);
                     Toast.makeText(getApplicationContext(), "Entries saved successfully.", Toast.LENGTH_SHORT).show();
                 }
@@ -151,6 +146,4 @@ public class ManagerConsole extends Activity {
             newQuestions.saveInBackground();
         } catch (IllegalArgumentException iae){ }
     }
-
-
 }

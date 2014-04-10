@@ -1,33 +1,26 @@
 package com.decisio.activities;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.Toast;
 
 import com.decisio.R;
-import com.decisio.models.CafeMood;
 import com.decisio.models.LocationPoint;
+import com.decisio.util.MapManagerUtil;
+import com.decisio.util.MapUserUtil;
 import com.decisio.util.MapUtil;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -38,27 +31,25 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.parse.FindCallback;
-import com.parse.ParseException;
-import com.parse.ParseQuery;
 
 public class MapActivity extends FragmentActivity implements
 GooglePlayServicesClient.ConnectionCallbacks,
 GooglePlayServicesClient.OnConnectionFailedListener{
 
+    // TODO: remove marker from location searched by user when he comes back from response screen (but display that point i.e. he should see that point instead of his current location). Do this in onResume
+    
     private SupportMapFragment mapFragment;
-    private GoogleMap map;
+    private static GoogleMap map;
     private LocationClient mLocationClient;
     private SearchView svLocationSearch;
-    private Geocoder geoCoder;
-    private final int MAX_RESULTS = 1; 
     private final String TAG = "MapActivity";
-    private Marker marker;
-    private LocationPoint managerLoc;
+    private static Marker marker;
+    private LocationPoint managerLoc, userLoc;
+    private MapUserUtil mapUser;
+    private MapManagerUtil mapManager;
+    private final int SEARCH_REQ_CODE = 1000;
 
     /*
      * Define a request code to send to Google Play services This code is
@@ -71,8 +62,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         svLocationSearch = (SearchView) findViewById(R.id.sv_search_location);
-        geoCoder = new Geocoder(getApplicationContext(), Locale.getDefault());
 
+        mapUser = new MapUserUtil();
         mLocationClient = new LocationClient(this, this, this);
         mapFragment = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map));
         if (mapFragment != null) {
@@ -88,8 +79,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         }
 
         setSearchListener();
-
-        // distinguish if the request came from user or manager signing up first time.
         setSelectLocationListener();
     }
 
@@ -100,10 +89,10 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     protected void onStart() {
         super.onStart();
         // Connect the client.
+        
         if (isGooglePlayServicesAvailable()) {
             mLocationClient.connect();
         }
-
     }
 
     /*
@@ -133,8 +122,19 @@ GooglePlayServicesClient.OnConnectionFailedListener{
                 mLocationClient.connect();
                 break;
             }
-
+            
+        case SEARCH_REQ_CODE:
+            if (resultCode == Activity.RESULT_OK) {
+                if (marker!=null) 
+                    marker.remove();
+            }
         }
+    }
+    
+    @Override
+    protected void onResume() {
+        // TODO Auto-generated method stub
+        super.onResume();
     }
 
     private boolean isGooglePlayServicesAvailable() {
@@ -183,10 +183,13 @@ GooglePlayServicesClient.OnConnectionFailedListener{
             // Take average (1 for sad, 2 for neutral, 3 for Happy) and display respective face (1 to 1.5 is sad), (1.5 to 2.25 is neutral) (2.25 to 3 is Happy)
             // For each location, from last 5 entries, select that ques that has max "true" considering it was last updated recently. This will be shown as snippet.
 
-            populateMap();
+            if (marker!=null)
+                marker.remove();
+            mapUser.populateMap();
         } else {
             Toast.makeText(this, "Current location was null, enable GPS on emulator!", Toast.LENGTH_SHORT).show();
         }
+        
     }
 
     /*
@@ -272,21 +275,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
                 try {
                     if (marker!=null) 
                         marker.remove();
-                    LocationPoint loc = getAddress(location);
-
-                    if (getIntent().getStringExtra("source").equals("manager")){
-                        managerLoc = loc;
-                    } 
-
-                    if (loc != null) {
-                        //addMarker(R.drawable.ic_happy_face, loc, loc.getLocName(), "Random reason");
-                        addMarker(R.drawable.ic_marker_pin, loc, loc.getLocName(), "");
-                        LatLng latLng = new LatLng(loc.getLocLatitude(), loc.getLocLongitude());
-                        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
-                        map.animateCamera(cameraUpdate);
-                        // clearing search field
-                        svLocationSearch.setQuery("", false);
-                    } 
+                    MapUtil.getLocationFromName(location);
+                    svLocationSearch.setQuery("", false);
+                    
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (IndexOutOfBoundsException ioe) {
@@ -307,200 +298,40 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         map.setOnInfoWindowClickListener(new OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
+                // distinguish if user is manager / general user
                 if (getIntent().getStringExtra("source").equalsIgnoreCase("user")){
+                    userLoc = MapUtil.getLoc();
                     Intent intent = new Intent(getApplicationContext(), UserResponseActivity.class);
-                    // get user Loc id (this user can be any location which is clicked). Hence, there needs to be a method to get loc id from Marker !
-                    Log.d(TAG, marker.getTitle().substring(0, marker.getTitle().indexOf(":")).trim());
-                    intent.putExtra("LocationId", Integer.parseInt(marker.getTitle().substring(0, marker.getTitle().indexOf(":")).trim()));
-                    startActivity(intent);
+                    // TODO: there is no id for a new location that user searches and that is not in our db
+                    try {
+                        intent.putExtra("LocationId", Integer.parseInt(marker.getTitle().substring(0, marker.getTitle().indexOf(":")).trim()));
+                    } catch (StringIndexOutOfBoundsException e) {
+                        e.printStackTrace();
+                    } 
+                    try {
+                        intent.putExtra("userSelectedLocation", userLoc);
+                    } catch (NullPointerException npe) {
+                        npe.printStackTrace(); // when we don't search
+                    }
+                    if (marker!=null) {
+                        marker.remove();
+                    }
+                    startActivityForResult(intent, SEARCH_REQ_CODE);
                 } else {
-                    showConfirmSelectionPopup();    
+                    managerLoc = MapUtil.getLoc();
+                    mapManager = new MapManagerUtil(MapActivity.this, managerLoc);
+                    mapManager.showConfirmSelectionPopup(svLocationSearch);
                 }
             }
         });    
-
+    }
+    
+    public static GoogleMap getMap() {
+        return map;
+    }
+    
+    public static Marker getMarker() {
+        return marker;
     }
 
-    private void showConfirmSelectionPopup () {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(managerLoc.getLocName())     //show loc name here
-        .setMessage("Are you sure you want to make this your location ?");
-
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // generate Loc if / passcode etc and save in db
-                showChooseLocationIdPopUp();
-            }
-        });
-
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                Log.d(TAG, "Cancel selection NO !!");
-
-                if (!svLocationSearch.getQuery().toString().isEmpty())
-                    svLocationSearch.setQuery("", false);
-            }
-        });
-        builder.show();
-    }
-
-    private void showChooseLocationIdPopUp(){
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-        alert.setTitle("Choose location ID");
-
-        // Set an EditText view to get user input 
-        final EditText etLocId = new EditText(this);
-        etLocId.setInputType(InputType.TYPE_CLASS_NUMBER);
-        alert.setView(etLocId);
-
-        alert.setPositiveButton("Sign-Up", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                final String locId = etLocId.getText().toString();
-
-                // check if this loc id exists ? if not, confirm sign up, put it to table and show user that he'll receive pwd email for sign up confirmation soon.
-
-                ParseQuery<LocationPoint> query = ParseQuery.getQuery(LocationPoint.class);
-                query.whereEqualTo("Id", Integer.parseInt(locId));
-
-                query.findInBackground(new FindCallback<LocationPoint>() {
-
-                    @Override
-                    public void done(List<LocationPoint> queryResult, ParseException excep) {
-                        if (queryResult != null) {
-                            if (queryResult.size()>0) {
-                                Toast.makeText(getApplicationContext(), "Location Id taken. Choose new one.", Toast.LENGTH_SHORT).show();
-                                showChooseLocationIdPopUp(); 
-                            }
-                            else {
-                                // location id is unique. take it and store it in db. Send email to us to approve.
-                                managerLoc.put("Id", Integer.parseInt(locId));
-                                managerLoc.put("Category", "Cafe");
-                                managerLoc.put("Name", managerLoc.getLocName());
-                                managerLoc.put("latitude", Double.toString(managerLoc.getLocLatitude()));
-                                managerLoc.put("longitude", Double.toString(managerLoc.getLocLongitude()));
-
-                                managerLoc.saveInBackground();
-
-                                Toast.makeText(getApplicationContext(), "Location Id saved. Please check your email in sometime for pass code." +locId, Toast.LENGTH_SHORT).show();
-                                // send email now.
-                                // take him back to home screen.
-                                finish();
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-
-            }
-        });
-
-        alert.show();
-    }
-
-    private LocationPoint getAddress(String location) throws IOException, IndexOutOfBoundsException{
-        List<Address> address = geoCoder.getFromLocationName(location, MAX_RESULTS);
-        LocationPoint loc = null;
-        if (address.size()>0) {
-            Address add = address.get(0);
-
-            StringBuilder fullAddName =  new StringBuilder();
-            for (int i=0;i< add.getMaxAddressLineIndex();i++)
-                fullAddName.append(add.getAddressLine(i)+",");
-
-            loc = new LocationPoint(
-                    address.get(0).getLatitude(),
-                    address.get(0).getLongitude(), 
-                    fullAddName.toString().substring(0, fullAddName.toString().length()-1));
-        } else {
-            Toast.makeText(getApplicationContext(), "Search failed to find any such location", Toast.LENGTH_SHORT).show();
-        }
-
-        return loc;
-
-    }
-
-    private void addMarker(int resourceId, LocationPoint loc, String title, String snippet){
-        marker = map.addMarker(new MarkerOptions()
-        .position(new LatLng(loc.getLocLatitude(), loc.getLocLongitude()))
-        .title(title)
-        .snippet(snippet)
-        .icon(BitmapDescriptorFactory.fromResource(resourceId)));
-    }
-
-    private void addMarkerFromDB (int resourceId, LocationPoint loc, String title, String snippet){
-        map.addMarker(new MarkerOptions()
-        .position(new LatLng(Double.parseDouble(loc.getString("latitude")), Double.parseDouble(loc.getString("longitude"))))
-        .title(loc.getInt("Id") + " :"+ title)
-        .snippet(snippet)
-        .icon(BitmapDescriptorFactory.fromResource(resourceId)));
-    }
-
-    private void populateMap(){
-        ParseQuery<LocationPoint> locQuery = ParseQuery.getQuery(LocationPoint.class);
-
-
-        locQuery.findInBackground(new FindCallback<LocationPoint>() {
-
-            @Override
-            public void done(List<LocationPoint> locQueryResult, ParseException excep) {
-                if (locQueryResult != null) {
-                    if (locQueryResult.size()>0) {
-                        for (LocationPoint loc: locQueryResult) {
-                            getMoodAtLocation(loc);
-                        }
-                    }
-                    else {
-                        // no location found
-                    }
-                }
-            }
-        });
-    }
-
-    private void getMoodAtLocation(final LocationPoint loc){
-        ParseQuery<CafeMood> moodQuery = ParseQuery.getQuery(CafeMood.class);
-        moodQuery.whereEqualTo("Id", loc.getInt("Id"));
-        moodQuery.findInBackground(new FindCallback<CafeMood>() {
-
-            @Override
-            public void done(List<CafeMood> moodQueryResult, ParseException excep) {
-                float averageMood = 0;
-
-                if (moodQueryResult != null) {
-                    if (moodQueryResult.size()>0) {
-                        for (CafeMood mood: moodQueryResult){
-                            averageMood += mood.getInt("overallMood");
-                        }
-                        averageMood = (averageMood/moodQueryResult.size());
-
-                        if (averageMood >1 && averageMood < 1.5) {
-                            // SAD
-                            addMarkerFromDB(R.drawable.ic_sad_face, loc, loc.getString("Name"), "");
-                        } else if (averageMood >= 1.5 && averageMood < 2.25) {
-                            // nNEUTRAL
-                            addMarkerFromDB(R.drawable.ic_neutral_face, loc, loc.getString("Name"), "");
-                        } else {
-                            // HAPPY
-                            addMarkerFromDB(R.drawable.ic_happy_face, loc, loc.getString("Name"), "");
-                        }
-                    }
-                }
-            }
-        });
-
-    }
-
-    /*
-     * if (rating == 1.0) 
-                    overallMood = "SAD";
-                else if (rating == 2.0) 
-                    overallMood = "NEUTRAL";
-                else if (rating == 3.0)
-                    overallMood = "HAPPY";
-     */
 }

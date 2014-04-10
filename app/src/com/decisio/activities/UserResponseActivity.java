@@ -27,7 +27,9 @@ import android.widget.Toast;
 import com.decisio.R;
 import com.decisio.adapters.QuesAdapter;
 import com.decisio.models.CafeMood;
+import com.decisio.models.LocationPoint;
 import com.decisio.models.ManagerQuestions;
+import com.decisio.util.MapUtil;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
@@ -43,8 +45,8 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
     private final Set<String> selectedParameters = new HashSet<String>();
     private List<String> questionParameters;
     private QuesAdapter quesAdap;
-    private int locId;
-    private String ques1, ques2, ques3;
+    private LocationPoint userSelectedloc;
+    private int userSelectedLocId;
 
 
     @Override
@@ -56,7 +58,9 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
         etOtherComments = (EditText) findViewById(R.id.et_other);
         tvCharsLeft = (TextView) findViewById(R.id.tv_char_left);
         questionParameters = new ArrayList<String>();
-        locId = getIntent().getIntExtra("LocationId", -1);
+
+        userSelectedloc = (LocationPoint) getIntent().getSerializableExtra("userSelectedLocation");
+        userSelectedLocId = getIntent().getIntExtra("LocationId", -1); 
         selectedParameters.clear();
         quesAdap = new QuesAdapter(getApplicationContext(), questionParameters);
         lvQues.setAdapter(quesAdap);
@@ -65,7 +69,7 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
 
         setCharLeftListener();
         setRatingBarListener();
-        
+
         clearExistingQuestions();
         populateQuestionsForLocation();
     }
@@ -96,6 +100,7 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
     public void onClickSwitchToMap(MenuItem mi) {
         // Prompt user that he's saving it.
         saveUserResponse();
+        setResult(this.RESULT_OK);
         finish();
     }
 
@@ -127,23 +132,23 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
         });
     }
 
-//    private void setLocIdDoneListener(){
-//        etLocId.setOnKeyListener(new OnKeyListener() {
-//
-//            @Override
-//            public boolean onKey(View v, int keyCode, KeyEvent event) {
-//                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-//                    Toast.makeText(getApplicationContext(), "Location Entered", Toast.LENGTH_SHORT).show();
-//                    locId = Integer.parseInt(etLocId.getText().toString().trim());
-//                    // TODO: check if this locId exists (else delete entry and re-prompt)
-//                    clearExistingQuestions();
-//                    // get Questions from backend and populate questions list
-//                    populateQuestionsForLocation();
-//                }       
-//                return false;
-//            }
-//        });
-//    }
+    //    private void setLocIdDoneListener(){
+    //        etLocId.setOnKeyListener(new OnKeyListener() {
+    //
+    //            @Override
+    //            public boolean onKey(View v, int keyCode, KeyEvent event) {
+    //                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+    //                    Toast.makeText(getApplicationContext(), "Location Entered", Toast.LENGTH_SHORT).show();
+    //                    locId = Integer.parseInt(etLocId.getText().toString().trim());
+    //                    // TODO: check if this locId exists (else delete entry and re-prompt)
+    //                    clearExistingQuestions();
+    //                    // get Questions from backend and populate questions list
+    //                    populateQuestionsForLocation();
+    //                }       
+    //                return false;
+    //            }
+    //        });
+    //    }
 
     private void setCharLeftListener(){
         etOtherComments.addTextChangedListener(new TextWatcher() {
@@ -190,7 +195,10 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
 
     private void populateQuestionsForLocation(){
         ParseQuery<ManagerQuestions> query = ParseQuery.getQuery(ManagerQuestions.class);
-        query.whereEqualTo("Id", locId);
+        if (userSelectedloc!=null)
+            query.whereEqualTo("Id", userSelectedloc.getInt("Id"));
+        else 
+            query.whereEqualTo("Id", userSelectedLocId);
 
         query.getFirstInBackground(new GetCallback<ManagerQuestions>() {
 
@@ -198,13 +206,9 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
             public void done(ManagerQuestions queryResult, ParseException excep) {
                 if (queryResult != null) {
                     if (excep == null ) {
-                        ques1 = queryResult.getString("Ques1");
-                        ques2 = queryResult.getString("Ques2");
-                        ques3 = queryResult.getString("Ques3");
-
-                        questionParameters.add(ques1);
-                        questionParameters.add(ques2);
-                        questionParameters.add(ques3);
+                        questionParameters.add(queryResult.getString("Ques1"));
+                        questionParameters.add(queryResult.getString("Ques2"));
+                        questionParameters.add(queryResult.getString("Ques3"));
 
                         quesAdap.notifyDataSetChanged();
 
@@ -213,7 +217,13 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
                         Log.d(TAG, "Error retrieving existing Questions. "+excep.getMessage());
                     }     
                 } else {
-                    Log.d("TAG", "No data Found. "+excep.getMessage());
+                    Log.d("TAG", "No data Found. ");
+                    // TODO: populate with pre-defined questions.
+                    questionParameters.add("Predefined Ques1");
+                    questionParameters.add("Predefined Ques2");
+                    questionParameters.add("Predefined Ques3");
+
+                    quesAdap.notifyDataSetChanged();
                 }
             }
         });
@@ -222,22 +232,37 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
     private void saveUserResponse(){
         CafeMood mood = new CafeMood();
 
-        mood.setQues1Selected(selectedParameters.contains(ques1));
-        mood.setQues2Selected(selectedParameters.contains(ques2));
-        mood.setQues3Selected(selectedParameters.contains(ques3));
+        if (!questionParameters.isEmpty()) {
+            mood.setQues1Selected(selectedParameters.contains(questionParameters.get(0)));
+            mood.setQues2Selected(selectedParameters.contains(questionParameters.get(1)));
+            mood.setQues3Selected(selectedParameters.contains(questionParameters.get(2)));
+        }
+        int locId = -1;
+        if (userSelectedloc != null)
+            locId = userSelectedloc.getLocId();
+        else 
+            locId = userSelectedLocId;
+
         mood.setLocId(locId);
         mood.setOverallMood((int)rBar.getRating());
+        if (mood.getOverallMood()!=0) { 
+            mood.put("Ques1", mood.isQues1Selected());
+            mood.put("Ques2", mood.isQues2Selected());
+            mood.put("Ques3", mood.isQues3Selected());
+            mood.put("overallMood", mood.getOverallMood());
 
-        mood.put("Ques1", mood.isQues1Selected());
-        mood.put("Ques2", mood.isQues2Selected());
-        mood.put("Ques3", mood.isQues3Selected());
-        mood.put("overallMood", mood.getOverallMood());
-
-        if (locId != -1) {
-            mood.put("Id", locId);
-            mood.saveInBackground();
-        } else {
-            Toast.makeText(getApplicationContext(), "Can NOT save selection. Enter location id.", Toast.LENGTH_SHORT).show();
+            if (locId != -1) {
+                mood.put("Id", locId);
+                if (userSelectedLocId == -1){
+                    LocationPoint loc = new LocationPoint();
+                    MapUtil.saveLocationInBackend(userSelectedloc, locId, "Cafe", userSelectedloc.getLocName(), userSelectedloc.getLocLatitude(), userSelectedloc.getLocLongitude(), userSelectedloc.getPasscode());
+                    // TODO: show smiley on map now corresponding to this location 
+                }
+                mood.saveInBackground();
+            }
+            else {
+                // there is nothing to do or save in backend
+            }
         }
     }
 
@@ -245,4 +270,5 @@ public class UserResponseActivity extends Activity implements OnItemClickListene
         questionParameters.clear();
         quesAdap.notifyDataSetChanged();
     }
+
 }
