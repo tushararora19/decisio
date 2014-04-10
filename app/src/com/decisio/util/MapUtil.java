@@ -51,7 +51,7 @@ public class MapUtil {
     }
 
     public static Marker addMarker(int resourceId, LocationPoint loc, String title, String snippet){
-        return MapActivity.getMap().addMarker(new MarkerOptions()
+        return MapActivity.map.addMarker(new MarkerOptions()
         .position(new LatLng(Double.parseDouble(loc.getLocLatitude()), Double.parseDouble(loc.getLocLongitude())))
         .title(title)
         .snippet(snippet)
@@ -59,7 +59,7 @@ public class MapUtil {
     }
 
     public static void addMarkerFromDB (int resourceId, LocationPoint loc, String title, String snippet){
-        MapActivity.getMap().addMarker(new MarkerOptions()
+        MapActivity.map.addMarker(new MarkerOptions()
         .position(new LatLng(Double.parseDouble(loc.getString("latitude")), Double.parseDouble(loc.getString("longitude"))))
         .title(loc.getInt("Id") + " :"+ title)
         .snippet(snippet)
@@ -151,7 +151,7 @@ public class MapUtil {
             }
             LatLng latLng = new LatLng(Double.parseDouble(loc.getLocLatitude()), Double.parseDouble(loc.getLocLongitude()));
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, OTHER_LOC_ZOOM_VALUE);
-            MapActivity.getMap().animateCamera(cameraUpdate);
+            MapActivity.map.animateCamera(cameraUpdate);
         }
     }
 }

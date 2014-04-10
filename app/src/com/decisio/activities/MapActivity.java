@@ -41,7 +41,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     // TODO: remove marker from location searched by user when he comes back from response screen (but display that point i.e. he should see that point instead of his current location). Do this in onResume
 
     private SupportMapFragment mapFragment;
-    private static GoogleMap map;
+    public static GoogleMap map;
     private LocationClient mLocationClient;
     private SearchView svLocationSearch;
     private final String TAG = "MapActivity";
@@ -133,9 +133,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     }
 
     @Override
-    protected void onResume() {
-        // TODO Auto-generated method stub
-        super.onResume();
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     private boolean isGooglePlayServicesAvailable() {
@@ -180,7 +180,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         } else {
             Toast.makeText(this, "Current location was null, enable GPS on emulator!", Toast.LENGTH_SHORT).show();
         }
-        
+
         if (marker!=null)
             marker.remove();
         mapUser.populateMap();        
@@ -271,7 +271,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
                         marker.remove();
                     MapUtil.getLocationFromName(location);
                     svLocationSearch.setQuery("", false);
-
+                    // TODO: this is a temporary solution to remove focus and have back click working in first attempt.
+                    // However, this will work only if something is searched, in case nothing is searched (and user had clicked searchView), he'll have to click back twice.
+                    svLocationSearch.clearFocus();
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (IndexOutOfBoundsException ioe) {
@@ -318,10 +320,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
                 }
             }
         });    
-    }
-
-    public static GoogleMap getMap() {
-        return map;
     }
 
     public static Marker getMarker() {
