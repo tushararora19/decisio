@@ -43,6 +43,10 @@ public class MapUserUtil {
         });
     }
 
+    //TODO: get corresponding last 5 entries (overallMood) from CafeMood This will be icon 
+    // Take average (1 for sad, 2 for neutral, 3 for Happy) and display respective face (1 to 1.5 is sad), (1.5 to 2.25 is neutral) (2.25 to 3 is Happy)
+    // For each location, from last 5 entries, select that ques that has max "true" considering it was last updated recently. This will be shown as snippet.
+
     private void getMoodAtLocation(final LocationPoint loc){
         ParseQuery<CafeMood> moodQuery = ParseQuery.getQuery(CafeMood.class);
         moodQuery.whereEqualTo("Id", loc.getInt("Id"));
